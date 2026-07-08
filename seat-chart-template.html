@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>座席表テンプレート</title>
+  <style>
+    :root {
+      --line: #111;
+      --paper: #ffffff;
+      --text: #111;
+      --muted: #666;
+      --accent: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      background: #fff;
+    }
+
+    main {
+      width: min(960px, calc(100% - 24px));
+      margin: 20px auto;
+      padding: 18px 10px 24px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 0 auto 12px;
+      max-width: 820px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .saved {
+      min-width: 7em;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .front {
+      width: 160px;
+      margin: 2px auto 8px;
+      padding: 4px 0;
+      border: 1px solid transparent;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .chart {
+      display: grid;
+      grid-template-columns: auto auto auto;
+      justify-content: center;
+      align-items: start;
+      gap: clamp(34px, 8vw, 86px);
+      overflow-x: auto;
+      padding: 0 4px 8px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .block {
+      display: grid;
+      grid-template-columns: repeat(2, 88px);
+      grid-template-rows: repeat(7, 31px);
+    }
+
+    .seat {
+      position: relative;
+      width: 88px;
+      height: 31px;
+      border: 0 solid var(--line);
+      background: var(--paper);
+    }
+
+    .seat.empty {
+      visibility: hidden;
+    }
+
+    .seat input {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      border-radius: 0;
+      padding: 2px 4px;
+      color: var(--text);
+      background: transparent;
+      font: 700 14px/1.1 "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      text-align: center;
+      outline: none;
+      letter-spacing: 0;
+    }
+
+    .seat input.len-5,
+    .seat input.len-6 {
+      font-size: 13px;
+      padding-inline: 2px;
+    }
+
+    .seat input:focus {
+      box-shadow: inset 0 0 0 2px var(--accent);
+      background: #eff6ff;
+    }
+
+    .print-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    button {
+      min-height: 34px;
+      border: 1px solid #c9c9c9;
+      border-radius: 6px;
+      padding: 0 12px;
+      background: #fff;
+      color: #222;
+      font: 700 13px/1 "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #888;
+    }
+
+    @media (max-width: 720px) {
+      body {
+        min-height: 100dvh;
+      }
+
+      main {
+        width: 100%;
+        margin: 0;
+        padding: 8px 10px 76px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        margin: 0 -10px 8px;
+        padding: 8px 12px;
+        background: #fff;
+        border-bottom: 1px solid #e5e5e5;
+      }
+
+      h1 {
+        font-size: 16px;
+      }
+
+      .saved {
+        font-size: 12px;
+      }
+
+      .front {
+        width: 100%;
+        margin: 0 auto 8px;
+        padding: 6px 0;
+        font-size: 13px;
+      }
+
+      .chart {
+        grid-template-columns: auto auto auto;
+        justify-content: center;
+        justify-items: center;
+        gap: clamp(12px, 4vw, 18px);
+        overflow: visible;
+        padding: 0;
+      }
+
+      .block {
+        width: auto;
+        grid-template-columns: repeat(2, clamp(40px, 12vw, 52px));
+        grid-template-rows: repeat(7, 34px);
+      }
+
+      .seat {
+        width: clamp(40px, 12vw, 52px);
+        height: 34px;
+      }
+
+      .seat input {
+        min-height: 34px;
+        padding: 2px 3px;
+        font-size: 14px;
+      }
+
+      .seat input.len-5,
+      .seat input.len-6 {
+        font-size: 12px;
+      }
+
+      .print-row {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 3;
+        margin: 0;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        background: #fff;
+        border-top: 1px solid #e5e5e5;
+      }
+
+      button {
+        flex: 1;
+        min-height: 44px;
+        font-size: 15px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      main {
+        width: 100%;
+        margin: 0;
+        padding: 10mm 4mm;
+      }
+
+      .toolbar,
+      .print-row {
+        display: none;
+      }
+
+      .chart {
+        overflow: visible;
+        gap: 26mm;
+      }
+
+      .seat input:focus {
+        box-shadow: none;
+        background: transparent;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="toolbar">
+      <h1>座席表</h1>
+      <div class="saved" id="savedStatus">保存済み</div>
+    </div>
+
+    <div class="front">教卓</div>
+    <div class="chart" id="chart" aria-label="座席表"></div>
+
+    <div class="print-row">
+      <button type="button" id="clearButton">全消去</button>
+      <button type="button" id="printButton">印刷</button>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "simpleSeatChart.v1";
+    const chart = document.getElementById("chart");
+    const savedStatus = document.getElementById("savedStatus");
+    const printButton = document.getElementById("printButton");
+    const clearButton = document.getElementById("clearButton");
+
+    const layout = {
+      left: [
+        [false, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [false, true],
+      ],
+      center: [
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+      ],
+      right: [
+        [true, false],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, true],
+        [true, false],
+      ],
+    };
+
+    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+    function updateLengthClass(input) {
+      input.classList.remove("len-5", "len-6");
+      if (input.value.length >= 5) {
+        input.classList.add(input.value.length >= 6 ? "len-6" : "len-5");
+      }
+    }
+
+    function save() {
+      const data = {};
+      document.querySelectorAll("[data-seat-id]").forEach((input) => {
+        data[input.dataset.seatId] = input.value;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      savedStatus.textContent = "保存済み";
+    }
+
+    function focusNextSeat(currentInput) {
+      const inputs = Array.from(document.querySelectorAll("[data-seat-id]"));
+      const nextInput = inputs[inputs.indexOf(currentInput) + 1];
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      } else {
+        currentInput.blur();
+      }
+    }
+
+    function hasSeat(rows, rowIndex, colIndex) {
+      return Boolean(rows[rowIndex] && rows[rowIndex][colIndex]);
+    }
+
+    function applySeatBorders(seat, rows, rowIndex, colIndex) {
+      seat.style.borderTopWidth = "1px";
+      seat.style.borderLeftWidth = "1px";
+      if (!hasSeat(rows, rowIndex, colIndex + 1)) {
+        seat.style.borderRightWidth = "1px";
+      }
+      if (!hasSeat(rows, rowIndex + 1, colIndex)) {
+        seat.style.borderBottomWidth = "1px";
+      }
+    }
+
+    function createSeat(id, active, rows, rowIndex, colIndex) {
+      const seat = document.createElement("div");
+      seat.className = active ? "seat" : "seat empty";
+      if (!active) return seat;
+      applySeatBorders(seat, rows, rowIndex, colIndex);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.inputMode = "text";
+      input.autocomplete = "off";
+      input.maxLength = 6;
+      input.dataset.seatId = id;
+      input.value = savedData[id] || "";
+      input.setAttribute("aria-label", `座席 ${id}`);
+      input.addEventListener("input", () => {
+        updateLengthClass(input);
+        save();
+        if (input.value.length >= input.maxLength) {
+          focusNextSeat(input);
+        }
+      });
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          focusNextSeat(input);
+        }
+      });
+      input.addEventListener("focus", () => {
+        input.select();
+      });
+      updateLengthClass(input);
+      seat.appendChild(input);
+      return seat;
+    }
+
+    Object.entries(layout).forEach(([blockName, rows]) => {
+      const block = document.createElement("section");
+      block.className = "block";
+      block.setAttribute("aria-label", `${blockName} ブロック`);
+      rows.forEach((row, rowIndex) => {
+        row.forEach((active, colIndex) => {
+          block.appendChild(createSeat(`${blockName}-${rowIndex + 1}-${colIndex + 1}`, active, rows, rowIndex, colIndex));
+        });
+      });
+      chart.appendChild(block);
+    });
+
+    printButton.addEventListener("click", () => window.print());
+    clearButton.addEventListener("click", () => {
+      if (!confirm("座席表の名前をすべて消去しますか？")) return;
+      document.querySelectorAll("[data-seat-id]").forEach((input) => {
+        input.value = "";
+        updateLengthClass(input);
+      });
+      save();
+    });
+  </script>
+</body>
+</html>
