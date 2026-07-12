@@ -177,33 +177,34 @@
 
       .chart {
         grid-template-columns: auto auto auto;
-        justify-content: center;
-        justify-items: center;
+        justify-content: start;
+        justify-items: start;
         gap: clamp(12px, 4vw, 18px);
-        overflow: visible;
-        padding: 0;
+        overflow-x: auto;
+        padding: 0 8px 12px;
+        -webkit-overflow-scrolling: touch;
       }
 
       .block {
         width: auto;
-        grid-template-columns: repeat(2, clamp(40px, 12vw, 52px));
+        grid-template-columns: repeat(2, 82px);
         grid-template-rows: repeat(7, 34px);
       }
 
       .seat {
-        width: clamp(40px, 12vw, 52px);
+        width: 82px;
         height: 34px;
       }
 
       .seat input {
         min-height: 34px;
-        padding: 2px 3px;
+        padding: 2px 4px;
         font-size: 14px;
       }
 
       .seat input.len-5,
       .seat input.len-6 {
-        font-size: 12px;
+        font-size: 14px;
       }
 
       .print-row {
