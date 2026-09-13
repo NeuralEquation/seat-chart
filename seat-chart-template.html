@@ -557,6 +557,11 @@
         padding-inline: 13px;
       }
 
+      /* 上部の保存ボタンは固定フッターへ集約し、操作ボタンを重複させない */
+      .preset-controls .save-button {
+        display: none;
+      }
+
       .secondary-actions {
         margin-top: 10px;
       }
@@ -603,6 +608,10 @@
         border-color: #bfdbfe;
         background: #eff6ff;
         color: #1d4ed8;
+      }
+
+      .print-row button:not(#saveButtonBottom) {
+        display: none;
       }
     }
 
