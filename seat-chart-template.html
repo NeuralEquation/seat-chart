@@ -5,646 +5,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>座席表テンプレート</title>
   <style>
-    :root {
-      --line: #111;
-      --paper: #ffffff;
-      --text: #111;
-      --muted: #666;
-      --accent: #2563eb;
+    :root { color-scheme: light; --text:#172b35; --muted:#536973; --accent:#176957; --line:#bdccd0; --paper:#fff; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--text); background:#f2f5f4; font:15px/1.65 system-ui,"Yu Gothic","Meiryo",sans-serif; }
+    main { max-width:1040px; margin:32px auto; padding:0 24px 40px; }
+    h1,h2,p { margin:0; }
+    h1 { font-size:25px; letter-spacing:.04em; }
+    h2 { font-size:20px; }
+    .toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .saved { font-size:13px; color:var(--accent); background:#e0eee7; border-radius:20px; padding:5px 12px; }
+    .saved.dirty { color:#8c510c; background:#fff0d6; }
+    .saved.error { color:#9d2828; background:#ffe9e9; }
+    button,input,select { font:inherit; }
+    button,select { min-height:44px; border:1px solid var(--line); border-radius:10px; padding:8px 14px; color:var(--text); background:#fff; }
+    button { cursor:pointer; font-weight:650; touch-action:manipulation; }
+    button:hover:not(:disabled) { background:#eef5f1; border-color:var(--accent); }
+    button:disabled { opacity:.5; cursor:default; }
+    :focus-visible { outline:3px solid #2477c4; outline-offset:3px; }
+    .save-button { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .save-button:hover:not(:disabled) { background:#115143; color:#fff; }
+    .preset-controls { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
+    .preset-select { flex:1; min-width:0; font-weight:700; }
+    #menuButton { min-width:48px; font-size:22px; }
+    .secondary-actions { display:flex; gap:8px; flex-wrap:wrap; margin:16px 0; }
+    .secondary-actions button { flex:1; }
+    .status-message { min-height:24px; font-size:13px; color:var(--muted); overflow-wrap:anywhere; margin:6px 0 10px; }
+    .status-message.error { color:#a12b2b; }
+    .workspace { background:#fff; border:1px solid #d9e3df; border-radius:20px; padding:22px 18px; box-shadow:0 8px 28px #173b2a06; }
+    .chart-tools { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+    .chart-tools p { font-size:13px; color:var(--muted); }
+    .view-controls { display:flex; gap:4px; padding:4px; background:#eef3f1; border-radius:12px; }
+    .view-controls button { background:transparent; border-color:transparent; min-height:40px; padding:6px 12px; font-size:13px; }
+    .view-controls button[aria-pressed="true"] { background:#fff; color:var(--accent); border-color:#b5cec0; }
+    .front { width:180px; text-align:center; padding:5px; border-top:4px solid #669580; border-radius:6px; background:#eaf3ee; color:#375d4b; font-size:13px; font-weight:700; margin:0 auto 24px; }
+    .chart { display:grid; grid-template-columns:repeat(3,max-content); justify-content:safe center; align-items:start; gap:28px; overflow-x:auto; padding:4px 4px 14px; }
+    .block { display:grid; grid-template-columns:repeat(2,104px); grid-template-rows:26px repeat(7,52px); gap:6px; }
+    .block::before { content:attr(aria-label); grid-column:1 / -1; text-align:center; color:var(--muted); font-size:12px; font-weight:600; }
+    .seat { position:relative; width:104px; height:52px; border:1px solid var(--line); border-radius:8px; background:var(--paper); }
+    .seat.empty { visibility:hidden; }
+    .seat.changed { border-color:#c88a32; background:#fff7e8; }
+    .seat:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px #17695728; }
+    .seat input { width:100%; height:100%; border:0; border-radius:inherit; padding:4px; color:var(--text); background:transparent; text-align:center; font-size:17px; font-weight:650; min-width:0; }
+    .seat input.len-5,.seat input.len-6 { font-size:16px; padding-inline:1px; }
+    .seat input::placeholder { color:#a1afb3; font-weight:400; font-size:12px; }
+    .chart-help { margin-top:8px; font-size:12px; color:var(--muted); }
+    .edit-actions { display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap; }
+    #seatCount { color:var(--muted); font-size:13px; margin-left:auto; }
+    dialog { width:min(640px,calc(100% - 24px)); max-height:85dvh; padding:0; border:1px solid #d9e3df; border-radius:18px; color:var(--text); box-shadow:0 24px 80px #102c3440; overflow:auto; }
+    dialog::backdrop { background:#142d3866; }
+    .dialog-body { display:grid; gap:18px; padding:24px; }
+    .dialog-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .dialog-close { font-size:22px; min-width:44px; padding:2px 10px; }
+    label { display:grid; gap:6px; font-size:14px; font-weight:650; }
+    input:not([data-seat-id]) { min-height:46px; width:100%; min-width:0; border:1px solid var(--line); border-radius:9px; padding:10px; background:#fff; color:var(--text); font-size:16px; }
+    .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .dialog-actions select { flex:1; min-width:0; max-width:100%; }
+    .preset-list,.history-list-modal { display:grid; gap:10px; }
+    .preset-item,.history-item { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #d6e1dc; padding:16px; border-radius:12px; }
+    .preset-item.current { background:#edf6ef; border-color:#86b69a; }
+    .preset-item > div,.history-item > div { min-width:0; overflow-wrap:anywhere; }
+    .preset-item button { flex-shrink:0; }
+    small { display:block; color:var(--muted); font-size:12px; margin-top:4px; }
+    .history-item { display:grid; }
+    .history-item details { margin-bottom:12px; }
+    summary { min-height:44px; cursor:pointer; padding:8px 0; }
+    .diff-list { list-style:none; padding:0; margin:8px 0; display:grid; gap:8px; }
+    .diff-list li { padding:10px 12px; background:#f3f6f4; border-radius:8px; overflow-wrap:anywhere; }
+    .history-empty { padding:22px 12px; color:var(--muted); text-align:center; }
+    .danger { color:#a12b2b; border-color:#e2c2c2; }
+    #menuDialog .dialog-actions { display:grid; }
+    #mergeConflicts { display:grid; gap:12px; }
+    .merge-conflict { padding:14px; border:1px solid #e4c896; border-radius:12px; background:#fffbf3; overflow-wrap:anywhere; }
+    .merge-conflict-actions { display:flex; gap:8px; margin-top:12px; }
+    .merge-conflict-actions button { flex:1; min-width:0; overflow-wrap:anywhere; }
+    .dialog-message { color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+    .dialog-feedback { color:#a12b2b; font-size:13px; overflow-wrap:anywhere; }
+    .dialog-feedback:empty { display:none; }
+    @media (max-width:720px) {
+      main { margin:0; padding:16px 12px 24px; }
+      h1 { font-size:22px; }
+      .toolbar { margin-bottom:14px; }
+      .saved { font-size:11px; padding:5px 8px; }
+      .preset-controls { flex-wrap:wrap; }
+      .preset-select { flex-basis:calc(100% - 64px); order:0; }
+      #menuButton { order:1; }
+      #saveButton { order:2; width:100%; }
+      .secondary-actions { gap:6px; }
+      .secondary-actions button { padding-inline:10px; font-size:14px; }
+      .workspace { padding:16px 8px; border-radius:14px; }
+      .chart { justify-content:start; gap:18px; }
+      .chart-tools { padding:0 4px; }
+      .block { grid-template-columns:repeat(2,104px); }
+      .chart.overview { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+      .chart.overview .block { grid-template-columns:repeat(2,minmax(0,1fr)); gap:3px; min-width:0; }
+      .chart.overview .seat { width:100%; }
+      .chart.overview input { writing-mode:vertical-rl; text-orientation:upright; font-size:13px; padding:2px; letter-spacing:0; }
+      .chart.overview .block { grid-template-rows:24px repeat(7,88px); }
+      .chart.overview .seat { height:88px; }
+      .chart.overview input.len-5,.chart.overview input.len-6 { font-size:13px; }
+      .dialog-body { padding:18px; gap:14px; }
+      .dialog-actions > button { flex:1 1 140px; }
+      .front { margin-bottom:14px; }
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      font-family: "Yu Gothic", "Meiryo", system-ui, sans-serif;
-      background: #fff;
-    }
-
-    main {
-      width: min(960px, calc(100% - 24px));
-      margin: 20px auto;
-      padding: 18px 10px 24px;
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin: 0 auto 12px;
-      max-width: 820px;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 700;
-    }
-
-    .saved {
-      min-width: 7em;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: right;
-    }
-
-    .saved.dirty {
-      color: #b45309;
-    }
-
-    .front {
-      width: 160px;
-      margin: 2px auto 8px;
-      padding: 4px 0;
-      border: 1px solid transparent;
-      text-align: center;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .chart {
-      display: grid;
-      grid-template-columns: auto auto auto;
-      justify-content: center;
-      align-items: start;
-      gap: clamp(34px, 8vw, 86px);
-      overflow-x: auto;
-      padding: 0 4px 8px;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .block {
-      display: grid;
-      grid-template-columns: repeat(2, 88px);
-      grid-template-rows: repeat(7, 31px);
-    }
-
-    .seat {
-      position: relative;
-      width: 88px;
-      height: 31px;
-      border: 0 solid var(--line);
-      background: var(--paper);
-    }
-
-    .seat.empty {
-      visibility: hidden;
-    }
-
-    .seat input {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      border-radius: 0;
-      padding: 2px 4px;
-      color: var(--text);
-      background: transparent;
-      font: 700 14px/1.1 "Yu Gothic", "Meiryo", system-ui, sans-serif;
-      text-align: center;
-      outline: none;
-      letter-spacing: 0;
-    }
-
-    .seat input.len-5,
-    .seat input.len-6 {
-      font-size: 13px;
-      padding-inline: 2px;
-    }
-
-    .seat input:focus {
-      box-shadow: inset 0 0 0 2px var(--accent);
-      background: #eff6ff;
-    }
-
-    .print-row {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-top: 18px;
-    }
-
-    .history {
-      max-width: 820px;
-      margin: 28px auto 0;
-      padding-top: 18px;
-      border-top: 1px solid #e5e5e5;
-    }
-
-    .history-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .history-heading h2 {
-      margin: 0;
-      font-size: 16px;
-    }
-
-    .history-status {
-      color: var(--muted);
-      font-size: 12px;
-      text-align: right;
-    }
-
-    .history-form {
-      display: flex;
-      align-items: end;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .history-form label {
-      display: grid;
-      flex: 1;
-      gap: 4px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .history-form input {
-      width: 100%;
-      min-height: 36px;
-      border: 1px solid #c9c9c9;
-      border-radius: 6px;
-      padding: 6px 9px;
-      color: var(--text);
-      background: #fff;
-      font: 14px/1.2 "Yu Gothic", "Meiryo", system-ui, sans-serif;
-    }
-
-    .history-form input:focus {
-      border-color: var(--accent);
-      outline: 2px solid #dbeafe;
-    }
-
-    .history-form button {
-      min-height: 36px;
-    }
-
-    .history-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .history-entry {
-      border: 1px solid #d9d9d9;
-      border-radius: 7px;
-      padding: 10px 12px;
-      background: #fff;
-    }
-
-    .history-entry-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-    }
-
-    .history-entry-name {
-      font-weight: 700;
-      overflow-wrap: anywhere;
-    }
-
-    .history-entry-date {
-      flex: 0 0 auto;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .history-entry-meta {
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .history-entry details {
-      margin-top: 8px;
-      font-size: 13px;
-    }
-
-    .history-entry summary {
-      cursor: pointer;
-      color: #333;
-    }
-
-    .diff-list {
-      display: grid;
-      gap: 4px;
-      margin: 8px 0 0;
-      padding-left: 20px;
-    }
-
-    .diff-added {
-      color: #166534;
-    }
-
-    .diff-removed {
-      color: #b91c1c;
-    }
-
-    .diff-changed {
-      color: #92400e;
-    }
-
-    .history-empty {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    button {
-      min-height: 34px;
-      border: 1px solid #c9c9c9;
-      border-radius: 6px;
-      padding: 0 12px;
-      background: #fff;
-      color: #222;
-      font: 700 13px/1 "Yu Gothic", "Meiryo", system-ui, sans-serif;
-      cursor: pointer;
-    }
-
-    button:hover {
-      border-color: #888;
-    }
-
-    .preset-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      max-width: 820px;
-      margin: 0 auto 14px;
-    }
-
-    .preset-select {
-      min-width: 0;
-      flex: 1;
-      min-height: 42px;
-      border: 1px solid #c9d4e2;
-      border-radius: 9px;
-      padding: 0 10px;
-      background: #fff;
-      color: var(--text);
-      font: 700 14px/1 "Yu Gothic", "Meiryo", system-ui, sans-serif;
-    }
-
-    .save-button {
-      border-color: #1d4ed8;
-      background: #1d4ed8;
-      color: #fff;
-    }
-
-    .save-button:disabled {
-      border-color: #d8e0ea;
-      background: #eef2f7;
-      color: #94a3b8;
-      cursor: default;
-    }
-
-    .secondary-actions {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      max-width: 820px;
-      margin: 14px auto 0;
-    }
-
-    .secondary-actions button {
-      min-height: 38px;
-    }
-
-    .status-message {
-      min-height: 20px;
-      max-width: 820px;
-      margin: 0 auto 4px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    dialog {
-      width: min(560px, calc(100% - 24px));
-      max-height: min(82vh, 720px);
-      border: 0;
-      border-radius: 14px;
-      padding: 0;
-      color: var(--text);
-      box-shadow: 0 20px 60px rgb(15 23 42 / 25%);
-    }
-
-    dialog::backdrop {
-      background: rgb(15 23 42 / 45%);
-    }
-
-    .dialog-body {
-      display: grid;
-      gap: 14px;
-      padding: 20px;
-    }
-
-    .dialog-heading {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .dialog-heading h2 {
-      margin: 0;
-      font-size: 18px;
-    }
-
-    .dialog-close {
-      min-height: 34px;
-      padding: 0 10px;
-      font-size: 20px;
-      line-height: 1;
-    }
-
-    .preset-list,
-    .history-list-modal {
-      display: grid;
-      gap: 8px;
-      max-height: 52vh;
-      overflow: auto;
-    }
-
-    .preset-item,
-    .history-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid #d9e2ec;
-      border-radius: 9px;
-      padding: 10px 12px;
-      background: #fff;
-    }
-
-    .preset-item.current {
-      border-color: #93c5fd;
-      background: #eff6ff;
-    }
-
-    .preset-item small,
-    .history-item small {
-      display: block;
-      margin-top: 3px;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .dialog-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .danger {
-      border-color: #fecaca;
-      color: #b91c1c;
-    }
-
-    .merge-conflict {
-      display: grid;
-      gap: 7px;
-      border: 1px solid #fed7aa;
-      border-radius: 9px;
-      padding: 10px;
-      background: #fff7ed;
-    }
-
-    .merge-conflict-actions {
-      display: flex;
-      gap: 6px;
-    }
-
-    .compare-result {
-      max-height: 42vh;
-      overflow: auto;
-    }
-
-    @media (max-width: 720px) {
-      :root {
-        --line: #b8c3d1;
-        --paper: #fff;
-        --text: #172033;
-        --muted: #64748b;
-        --accent: #1d4ed8;
-      }
-
-      body {
-        min-height: 100dvh;
-        background: #f4f7fb;
-      }
-
-      main {
-        width: 100%;
-        margin: 0;
-        padding: 8px 10px 88px;
-      }
-
-      .toolbar {
-        position: sticky;
-        top: 0;
-        z-index: 2;
-        margin: 0 -10px 12px;
-        padding: 12px 14px;
-        background: rgb(255 255 255 / 96%);
-        border-bottom: 1px solid #dbe3ee;
-        backdrop-filter: blur(10px);
-      }
-
-      h1 {
-        font-size: 17px;
-      }
-
-      .saved {
-        min-width: auto;
-        padding: 4px 8px;
-        border-radius: 999px;
-        background: #e8f7ee;
-        color: #247144;
-        font-size: 11px;
-        font-weight: 700;
-      }
-
-      .front {
-        width: min(220px, 72%);
-        margin: 0 auto 12px;
-        padding: 7px 0;
-        border: 0;
-        border-radius: 999px;
-        background: #dbeafe;
-        color: #1e40af;
-        font-size: 12px;
-        font-weight: 700;
-      }
-
-      .chart {
-        grid-template-columns: repeat(3, auto);
-        justify-content: center;
-        justify-items: center;
-        gap: 10px;
-        overflow-x: auto;
-        padding: 10px 8px 14px;
-        border: 1px solid #dbe3ee;
-        border-radius: 14px;
-        background: #fff;
-        box-shadow: 0 3px 12px rgb(30 64 175 / 6%);
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .block {
-        grid-template-columns: repeat(2, clamp(50px, calc((100vw - 56px) / 6), 58px));
-        grid-template-rows: repeat(7, 42px);
-      }
-
-      .seat {
-        width: clamp(50px, calc((100vw - 56px) / 6), 58px);
-        height: 42px;
-      }
-
-      .seat input {
-        min-height: 42px;
-        padding: 2px 1px;
-        font-size: 12px;
-        line-height: 1.15;
-      }
-
-      .seat input.len-5,
-      .seat input.len-6 {
-        padding-inline: 0;
-        font-size: 10px;
-      }
-
-      .print-row {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 3;
-        margin: 0;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-        background: rgb(255 255 255 / 96%);
-        border-top: 1px solid #dbe3ee;
-        box-shadow: 0 -4px 14px rgb(15 23 42 / 8%);
-        backdrop-filter: blur(10px);
-      }
-
-      .history {
-        display: none;
-      }
-
-      .preset-controls {
-        margin-bottom: 10px;
-      }
-
-      .preset-select {
-        min-height: 44px;
-        font-size: 15px;
-      }
-
-      .preset-controls button {
-        min-height: 44px;
-        padding-inline: 13px;
-      }
-
-      /* 上部の保存ボタンは固定フッターへ集約し、操作ボタンを重複させない */
-      .preset-controls .save-button {
-        display: none;
-      }
-
-      .secondary-actions {
-        margin-top: 10px;
-      }
-
-      .secondary-actions button {
-        min-height: 42px;
-        font-size: 14px;
-      }
-
-      .dialog-body {
-        padding: 16px;
-      }
-
-      .history-form {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .history-form button {
-        width: 100%;
-        border-color: #1d4ed8;
-        background: #1d4ed8;
-        color: #fff;
-      }
-
-      .history-entry-head {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      button {
-        flex: 1;
-        min-height: 44px;
-        font-size: 15px;
-      }
-
-      .print-row button:first-child {
-        border-color: #fecaca;
-        color: #b91c1c;
-      }
-
-      .print-row button:last-child {
-        border-color: #bfdbfe;
-        background: #eff6ff;
-        color: #1d4ed8;
-      }
-
-      .print-row button:not(#saveButtonBottom) {
-        display: none;
-      }
-    }
-
     @media print {
-      body {
-        background: #fff;
-      }
-
-      main {
-        width: 100%;
-        margin: 0;
-        padding: 10mm 4mm;
-      }
-
-      .toolbar,
-      .print-row,
-      .history,
-      .preset-controls,
-      .secondary-actions,
-      .status-message,
-      dialog {
-        display: none;
-      }
-
-      .chart {
-        overflow: visible;
-        gap: 26mm;
-      }
-
-      .seat input:focus {
-        box-shadow: none;
-        background: transparent;
-      }
+      @page { size:A4 landscape; margin:12mm; }
+      body { background:#fff; color:#000; }
+      main { max-width:none; margin:0; padding:0; }
+      .toolbar,.preset-controls,.secondary-actions,.status-message,.chart-tools,.chart-help,.edit-actions,dialog { display:none!important; }
+      .workspace { padding:0; border:0; box-shadow:none; }
+      .front { background:none; color:#000; border-color:#000; }
+      .chart,.chart.overview { display:grid; grid-template-columns:repeat(3,max-content); justify-content:center; overflow:visible; gap:20mm; }
+      .chart .block { grid-template-columns:repeat(2,30mm); grid-template-rows:6mm repeat(7,11mm); gap:1mm; }
+      .chart .seat { width:30mm; height:11mm; background:#fff; border:1px solid #333; box-shadow:none; }
+      .chart .seat input,.chart .seat input.len-5,.chart .seat input.len-6 { writing-mode:horizontal-tb; font-size:12pt; color:#000; outline:0; box-shadow:none; }
     }
   </style>
 </head>
@@ -662,8 +135,19 @@
     </div>
     <div class="status-message" id="statusMessage" aria-live="polite"></div>
 
-    <div class="front">教卓</div>
+    <section class="workspace" aria-label="教室の座席">
+      <div class="chart-tools">
+        <p>座席をタップして名前を入力</p>
+        <div class="view-controls" aria-label="座席表の表示">
+          <button type="button" id="readableView" aria-pressed="true">読みやすく</button>
+          <button type="button" id="overviewView" aria-pressed="false">全体を見る</button>
+        </div>
+      </div>
+    <div class="front">教卓 / 前</div>
     <div class="chart" id="chart" aria-label="座席表"></div>
+      <p class="chart-help">左右にスクロールできます。色の付いた席は、保存前の変更です。</p>
+      <div class="edit-actions"><button type="button" id="undoButton" disabled>元に戻す</button><button type="button" id="redoButton" disabled>やり直す</button><span id="seatCount"></span></div>
+    </section>
 
     <div class="secondary-actions">
       <button type="button" id="presetButton">プリセット</button>
@@ -671,11 +155,6 @@
       <button type="button" id="printButton">印刷</button>
     </div>
 
-    <div class="print-row">
-      <button type="button" id="presetButtonBottom">プリセット</button>
-      <button type="button" id="saveButtonBottom" class="save-button" disabled>保存</button>
-      <button type="button" id="historyButtonBottom">履歴</button>
-    </div>
 
     <dialog id="presetDialog" aria-labelledby="presetDialogTitle">
       <div class="dialog-body">
@@ -720,291 +199,6 @@
     </dialog>
   </main>
 
-  <script type="text/plain" data-legacy-script>
-    const STORAGE_KEY = "simpleSeatChart.v1";
-    const HISTORY_KEY = "simpleSeatChart.history.v1";
-    const chart = document.getElementById("chart");
-    const savedStatus = document.getElementById("savedStatus");
-    const historyStatus = document.getElementById("historyStatus");
-    const historyList = document.getElementById("historyList");
-    const versionName = document.getElementById("versionName");
-    const recordButton = document.getElementById("recordButton");
-    const printButton = document.getElementById("printButton");
-    const clearButton = document.getElementById("clearButton");
-
-    const layout = {
-      left: [
-        [false, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [false, true],
-      ],
-      center: [
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-      ],
-      right: [
-        [true, false],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, true],
-        [true, false],
-      ],
-    };
-
-    const savedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    let history = loadHistory();
-
-    function loadHistory() {
-      try {
-        const parsed = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-        if (!Array.isArray(parsed)) return [];
-        return parsed.filter((entry) => entry && typeof entry === "object" && entry.data && typeof entry.data === "object");
-      } catch (error) {
-        return [];
-      }
-    }
-
-    function updateLengthClass(input) {
-      input.classList.remove("len-5", "len-6");
-      if (input.value.length >= 5) {
-        input.classList.add(input.value.length >= 6 ? "len-6" : "len-5");
-      }
-    }
-
-    function save() {
-      const data = {};
-      document.querySelectorAll("[data-seat-id]").forEach((input) => {
-        data[input.dataset.seatId] = input.value;
-      });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      savedStatus.textContent = "保存済み";
-    }
-
-    function getCurrentData() {
-      const data = {};
-      document.querySelectorAll("[data-seat-id]").forEach((input) => {
-        data[input.dataset.seatId] = input.value;
-      });
-      return data;
-    }
-
-    function getSeatLabel(seatId) {
-      const [block, row, column] = seatId.split("-");
-      const blockLabels = { left: "左", center: "中央", right: "右" };
-      return `${blockLabels[block] || block} ${row}行${column}列`;
-    }
-
-    function getDiff(previousData, currentData) {
-      return Object.keys(currentData)
-        .filter((seatId) => (previousData[seatId] || "") !== (currentData[seatId] || ""))
-        .map((seatId) => {
-          const before = previousData[seatId] || "";
-          const after = currentData[seatId] || "";
-          return {
-            seatId,
-            label: getSeatLabel(seatId),
-            before,
-            after,
-            type: !before ? "added" : !after ? "removed" : "changed",
-          };
-        });
-    }
-
-    function formatDate(value) {
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return "日時不明";
-      return date.toLocaleString("ja-JP", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
-
-    function createDiffText(diff) {
-      if (diff.type === "added") return `${diff.label}: （空欄） → ${diff.after}`;
-      if (diff.type === "removed") return `${diff.label}: ${diff.before} → （空欄）`;
-      return `${diff.label}: ${diff.before} → ${diff.after}`;
-    }
-
-    function renderHistory() {
-      historyList.replaceChildren();
-      if (!history.length) {
-        const empty = document.createElement("p");
-        empty.className = "history-empty";
-        empty.textContent = "まだ記録はありません。記録名を入力して「差分を記録」を押してください。";
-        historyList.appendChild(empty);
-        return;
-      }
-
-      history.forEach((entry, index) => {
-        const previousData = history[index + 1]?.data || {};
-        const diff = getDiff(previousData, entry.data);
-        const article = document.createElement("article");
-        article.className = "history-entry";
-
-        const head = document.createElement("div");
-        head.className = "history-entry-head";
-        const name = document.createElement("div");
-        name.className = "history-entry-name";
-        name.textContent = entry.name || "名称なし";
-        const date = document.createElement("time");
-        date.className = "history-entry-date";
-        date.dateTime = entry.createdAt || "";
-        date.textContent = formatDate(entry.createdAt);
-        head.append(name, date);
-        article.appendChild(head);
-
-        const meta = document.createElement("div");
-        meta.className = "history-entry-meta";
-        meta.textContent = index === history.length - 1
-          ? `初回記録・変更 ${diff.length}件`
-          : `変更 ${diff.length}件`;
-        article.appendChild(meta);
-
-        const details = document.createElement("details");
-        const summary = document.createElement("summary");
-        summary.textContent = diff.length ? "差分を見る" : "変更なし";
-        details.appendChild(summary);
-        if (diff.length) {
-          const list = document.createElement("ul");
-          list.className = "diff-list";
-          diff.forEach((item) => {
-            const listItem = document.createElement("li");
-            listItem.className = `diff-${item.type}`;
-            listItem.textContent = createDiffText(item);
-            list.appendChild(listItem);
-          });
-          details.appendChild(list);
-        }
-        article.appendChild(details);
-        historyList.appendChild(article);
-      });
-    }
-
-    function focusNextSeat(currentInput) {
-      const inputs = Array.from(document.querySelectorAll("[data-seat-id]"));
-      const nextInput = inputs[inputs.indexOf(currentInput) + 1];
-      if (nextInput) {
-        nextInput.focus();
-        nextInput.select();
-      } else {
-        currentInput.blur();
-      }
-    }
-
-    function hasSeat(rows, rowIndex, colIndex) {
-      return Boolean(rows[rowIndex] && rows[rowIndex][colIndex]);
-    }
-
-    function applySeatBorders(seat, rows, rowIndex, colIndex) {
-      seat.style.borderTopWidth = "1px";
-      seat.style.borderLeftWidth = "1px";
-      if (!hasSeat(rows, rowIndex, colIndex + 1)) {
-        seat.style.borderRightWidth = "1px";
-      }
-      if (!hasSeat(rows, rowIndex + 1, colIndex)) {
-        seat.style.borderBottomWidth = "1px";
-      }
-    }
-
-    function createSeat(id, active, rows, rowIndex, colIndex) {
-      const seat = document.createElement("div");
-      seat.className = active ? "seat" : "seat empty";
-      if (!active) return seat;
-      applySeatBorders(seat, rows, rowIndex, colIndex);
-
-      const input = document.createElement("input");
-      input.type = "text";
-      input.inputMode = "text";
-      input.autocomplete = "off";
-      input.maxLength = 6;
-      input.dataset.seatId = id;
-      input.value = savedData[id] || "";
-      input.setAttribute("aria-label", `座席 ${id}`);
-      input.addEventListener("input", () => {
-        updateLengthClass(input);
-        save();
-        if (input.value.length >= input.maxLength) {
-          focusNextSeat(input);
-        }
-      });
-      input.addEventListener("keydown", (event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          focusNextSeat(input);
-        }
-      });
-      input.addEventListener("focus", () => {
-        input.select();
-      });
-      updateLengthClass(input);
-      seat.appendChild(input);
-      return seat;
-    }
-
-    Object.entries(layout).forEach(([blockName, rows]) => {
-      const block = document.createElement("section");
-      block.className = "block";
-      block.setAttribute("aria-label", `${blockName} ブロック`);
-      rows.forEach((row, rowIndex) => {
-        row.forEach((active, colIndex) => {
-          block.appendChild(createSeat(`${blockName}-${rowIndex + 1}-${colIndex + 1}`, active, rows, rowIndex, colIndex));
-        });
-      });
-      chart.appendChild(block);
-    });
-
-    recordButton.addEventListener("click", () => {
-      const name = versionName.value.trim();
-      if (!name) {
-        historyStatus.textContent = "記録名を入力してください";
-        versionName.focus();
-        return;
-      }
-
-      const entry = {
-        id: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        name,
-        createdAt: new Date().toISOString(),
-        data: getCurrentData(),
-      };
-
-      try {
-        history.unshift(entry);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-        versionName.value = "";
-        historyStatus.textContent = `「${name}」を記録しました`;
-        renderHistory();
-      } catch (error) {
-        history.shift();
-        historyStatus.textContent = "記録できませんでした";
-      }
-    });
-
-    renderHistory();
-    printButton.addEventListener("click", () => window.print());
-    clearButton.addEventListener("click", () => {
-      if (!confirm("座席表の名前をすべて消去しますか？")) return;
-      document.querySelectorAll("[data-seat-id]").forEach((input) => {
-        input.value = "";
-        updateLengthClass(input);
-      });
-      save();
-    });
-  </script>
 
   <script>
     const APP_KEY = "simpleSeatChart.v2";
@@ -1015,7 +209,6 @@
     const statusMessage = document.getElementById("statusMessage");
     const presetSelect = document.getElementById("presetSelect");
     const saveButton = document.getElementById("saveButton");
-    const saveButtonBottom = document.getElementById("saveButtonBottom");
     const presetList = document.getElementById("presetList");
     const historyList = document.getElementById("historyList");
     const layout = {
@@ -1025,7 +218,8 @@
     };
 
     const clone = (value) => JSON.parse(JSON.stringify(value));
-    const newId = () => window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let idCounter = 0;
+    const newId = () => (window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`) + "-" + (++idCounter);
     function readJson(key, fallback) {
       try { const value = JSON.parse(localStorage.getItem(key) || ""); return value ?? fallback; } catch { return fallback; }
     }
@@ -1061,12 +255,35 @@
       const stored = readJson(APP_KEY, null);
       if (!stored || stored.version !== 2 || !Array.isArray(stored.presets) || !stored.presets.length) return migrate();
       stored.presets = stored.presets.filter((p) => p && p.id).map((p) => ({ ...makePreset(p.name, p.data), ...p, data: cleanData(p.data), history: Array.isArray(p.history) ? p.history : [] }));
+      if (!stored.presets.length) return migrate();
+      const ids = new Set();
+      stored.presets.forEach((p) => {
+        if (ids.has(p.id)) p.id = newId();
+        ids.add(p.id);
+        p.name = typeof p.name === "string" && p.name.trim() ? p.name : "名称なし";
+        p.history = p.history.filter((e) => e && e.data && typeof e.data === "object").map((e) => ({ ...e, data:cleanData(e.data), previousData:e.previousData ? cleanData(e.previousData) : undefined }));
+      });
       if (!stored.presets.some((p) => p.id === stored.activePresetId)) stored.activePresetId = stored.presets[0].id;
-      stored.workingData = cleanData(stored.workingData || stored.presets[0].data);
+      stored.workingData = cleanData(stored.workingData || stored.presets.find((p) => p.id === stored.activePresetId).data);
       return stored;
     }
     let state = loadState();
-    if (!readJson(APP_KEY, null)) { try { localStorage.setItem(APP_KEY, JSON.stringify(state)); } catch {} }
+    let storageError = false;
+    let undoStack = [], redoStack = [];
+    function rememberEdit() {
+      undoStack.push(clone(state.workingData));
+      if (undoStack.length > 100) undoStack.shift();
+      redoStack = [];
+    }
+    function refreshAll() { renderPresetSelects(); renderPresetList(); updateStatus(); }
+    function transact(change, message) {
+      const before = clone(state);
+      change();
+      if (!persist()) { state = before; refreshAll(); return false; }
+      refreshAll();
+      if (message) setStatus(message);
+      return true;
+    }
     let pendingSwitch = null;
     let nameDialogMode = null;
     let mergeData = {};
@@ -1076,24 +293,44 @@
     function persist() {
       try {
         localStorage.setItem(APP_KEY, JSON.stringify(state));
-        localStorage.setItem(OLD_KEY, JSON.stringify(state.workingData));
+        storageError = false;
+        return true;
       } catch {
-        setStatus("保存領域に書き込めませんでした。ブラウザの設定を確認してください。");
+        storageError = true;
+        setStatus("この端末に保存できませんでした。入力は画面に残っています。ページを閉じずに再試行してください。");
+        return false;
       }
     }
+
     function activePreset() { return state.presets.find((p) => p.id === state.activePresetId) || state.presets[0]; }
     function isDirty() { return JSON.stringify(cleanData(activePreset().data)) !== JSON.stringify(cleanData(state.workingData)); }
-    function setStatus(message) { statusMessage.textContent = message || ""; }
+    function setStatus(message) {
+      statusMessage.textContent = message || "";
+      statusMessage.classList.toggle("error", storageError);
+      document.querySelectorAll(".dialog-feedback").forEach((node) => {
+        node.textContent = storageError ? message : "";
+      });
+    }
     function updateStatus() {
       const dirty = isDirty();
-      savedStatus.textContent = dirty ? "未保存の変更あり" : "保存済み ✓";
+      savedStatus.textContent = storageError ? "端末への保存に失敗" : dirty ? "未保存の変更あり" : "保存済み ✓";
+      savedStatus.classList.toggle("error", storageError);
       savedStatus.classList.toggle("dirty", dirty);
-      saveButton.disabled = !dirty;
-      saveButtonBottom.disabled = !dirty;
+      saveButton.disabled = !dirty && !storageError;
+      document.getElementById("undoButton").disabled = !undoStack.length;
+      document.getElementById("redoButton").disabled = !redoStack.length;
+      document.getElementById("seatCount").textContent = `${Object.values(state.workingData).filter(Boolean).length} / 38席 入力済み`;
+      syncInputs();
     }
     function syncInputs() {
-      document.querySelectorAll("[data-seat-id]").forEach((input) => { input.value = state.workingData[input.dataset.seatId] || ""; updateLengthClass(input); });
+      document.querySelectorAll("[data-seat-id]").forEach((input) => {
+        const value = state.workingData[input.dataset.seatId] || "";
+        if (input.value !== value) input.value = value;
+        updateLengthClass(input);
+        input.parentElement.classList.toggle("changed", value !== (activePreset().data[input.dataset.seatId] || ""));
+      });
     }
+
     function formatDate(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? "日時不明" : date.toLocaleString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); }
     function updateLengthClass(input) { input.classList.remove("len-5", "len-6"); if (input.value.length >= 5) input.classList.add(input.value.length >= 6 ? "len-6" : "len-5"); }
     function seatLabel(id) { const [block, row, column] = id.split("-"); return `${({ left: "左", center: "中央", right: "右" })[block] || block} ${row}行${column}列`; }
@@ -1103,56 +340,165 @@
       const seat = document.createElement("div"); seat.className = active ? "seat" : "seat empty"; if (!active) return seat;
       seat.style.borderTopWidth = "1px"; seat.style.borderLeftWidth = "1px"; if (!hasSeat(rows, r, c + 1)) seat.style.borderRightWidth = "1px"; if (!hasSeat(rows, r + 1, c)) seat.style.borderBottomWidth = "1px";
       const input = document.createElement("input"); input.type = "text"; input.inputMode = "text"; input.autocomplete = "off"; input.maxLength = 6; input.dataset.seatId = id; input.value = state.workingData[id] || ""; input.setAttribute("aria-label", `座席 ${seatLabel(id)}`);
-      input.addEventListener("input", () => { state.workingData[id] = input.value; updateLengthClass(input); persist(); updateStatus(); });
-      input.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); focusNextSeat(input); } }); input.addEventListener("focus", () => input.select()); updateLengthClass(input); seat.appendChild(input); return seat;
+      input.placeholder = "—";
+      input.addEventListener("input", () => { rememberEdit(); state.workingData[id] = input.value; updateLengthClass(input); persist(); updateStatus(); });
+      input.addEventListener("keydown", (event) => { if (event.key === "Enter" && !event.isComposing) { event.preventDefault(); focusNextSeat(input); } }); input.addEventListener("focus", () => input.select()); updateLengthClass(input); seat.appendChild(input); return seat;
     }
-    Object.entries(layout).forEach(([block, rows]) => { const section = document.createElement("section"); section.className = "block"; section.setAttribute("aria-label", `${block} ブロック`); rows.forEach((row, r) => row.forEach((active, c) => section.appendChild(createSeat(`${block}-${r + 1}-${c + 1}`, active, rows, r, c)))); chart.appendChild(section); });
+    Object.entries(layout).forEach(([block, rows]) => { const section = document.createElement("section"); section.className = "block"; section.setAttribute("aria-label", `${({left:"左",center:"中央",right:"右"})[block]}ブロック`); rows.forEach((row, r) => row.forEach((active, c) => section.appendChild(createSeat(`${block}-${r + 1}-${c + 1}`, active, rows, r, c)))); chart.appendChild(section); });
 
     function renderPresetSelects() {
       const selects = [presetSelect, document.getElementById("compareA"), document.getElementById("compareB"), document.getElementById("mergeA"), document.getElementById("mergeB")];
-      selects.forEach((select) => { const current = select.value; select.replaceChildren(); state.presets.forEach((p) => { const option = new Option(p.name, p.id); select.appendChild(option); }); if ([...select.options].some((o) => o.value === current)) select.value = current; });
+      selects.forEach((select) => { const current = select.value; select.replaceChildren(); state.presets.forEach((p) => { const option = new Option(p.name, p.id); select.appendChild(option); }); if ([...select.options].some((o) => o.value === current)) select.value = current; else if ((select.id==="compareB" || select.id==="mergeB") && state.presets.length>1) select.value=state.presets[1].id; });
       presetSelect.value = state.activePresetId;
+      ["compareButton","mergeButton"].forEach((id) => { document.getElementById(id).disabled=state.presets.length<2; });
     }
     function renderPresetList() {
       presetList.replaceChildren(); state.presets.forEach((p) => { const item = document.createElement("div"); item.className = `preset-item${p.id === state.activePresetId ? " current" : ""}`; const info = document.createElement("div"); const title = document.createElement("strong"); title.textContent = p.name; const meta = document.createElement("small"); meta.textContent = `更新 ${formatDate(p.updatedAt)}`; info.append(title, meta); const open = document.createElement("button"); open.textContent = p.id === state.activePresetId ? "選択中" : "開く"; open.disabled = p.id === state.activePresetId; open.addEventListener("click", () => requestSwitch(p.id)); item.append(info, open); presetList.appendChild(item); });
     }
     function renderHistory() {
       const history = activePreset().history || []; historyList.replaceChildren(); if (!history.length) { const empty = document.createElement("p"); empty.className = "history-empty"; empty.textContent = "保存すると、ここに自動で履歴が残ります。"; historyList.appendChild(empty); return; }
-      history.forEach((entry, index) => { const item = document.createElement("article"); item.className = "history-item"; const info = document.createElement("div"); const title = document.createElement("strong"); title.textContent = formatDate(entry.createdAt); const meta = document.createElement("small"); meta.textContent = `変更 ${entry.changeCount ?? 0}席`; info.append(title, meta); const actions = document.createElement("div"); const details = document.createElement("details"); const summary = document.createElement("summary"); summary.textContent = "差分"; const list = document.createElement("ul"); list.className = "diff-list"; diffData(entry.previousData || history[index + 1]?.data || {}, entry.data).forEach((d) => { const li = document.createElement("li"); li.className = `diff-${d.type}`; li.textContent = `${d.label}: ${d.before || "（空欄）"} → ${d.after || "（空欄）"}`; list.appendChild(li); }); details.append(summary, list); const restore = document.createElement("button"); restore.textContent = "この状態に復元"; restore.addEventListener("click", () => { state.workingData = cleanData(entry.data); syncInputs(); persist(); updateStatus(); closeDialog("historyDialog"); setStatus("履歴の状態を編集中に復元しました。保存すると新しい履歴になります。"); }); actions.append(details, restore); item.append(info, actions); historyList.appendChild(item); });
+      history.forEach((entry, index) => { const item = document.createElement("article"); item.className = "history-item"; const info = document.createElement("div"); const title = document.createElement("strong"); title.textContent = formatDate(entry.createdAt); const meta = document.createElement("small"); meta.textContent = `変更 ${entry.changeCount ?? 0}席`; info.append(title, meta); const actions = document.createElement("div"); const details = document.createElement("details"); const summary = document.createElement("summary"); summary.textContent = "差分"; const list = document.createElement("ul"); list.className = "diff-list"; diffData(entry.previousData || history[index + 1]?.data || {}, entry.data).forEach((d) => { const li = document.createElement("li"); li.className = `diff-${d.type}`; li.textContent = `${d.label}: ${d.before || "（空欄）"} → ${d.after || "（空欄）"}`; list.appendChild(li); }); details.append(summary, list); const restore = document.createElement("button"); restore.textContent = "この状態に復元"; restore.addEventListener("click", () => {
+          if (!window.confirm(isDirty() ? "未保存の入力を、この履歴の状態に置き換えますか？「元に戻す」で戻せます。" : "この履歴の状態を読み込みますか？")) return;
+          rememberEdit(); state.workingData=cleanData(entry.data); persist(); updateStatus(); closeDialog("historyDialog");
+          if (!storageError) setStatus("履歴を読み込みました。「変更を保存」で確定できます。");
+        }); actions.append(details, restore); item.append(info, actions); historyList.appendChild(item); });
     }
-    function openDialog(id) { document.getElementById(id).showModal(); }
-    function closeDialog(id) { document.getElementById(id).close(); }
-    function savePreset() { const preset = activePreset(); const changes = diffData(preset.data, state.workingData); if (!changes.length) return; const now = new Date().toISOString(); preset.history.unshift({ id: newId(), createdAt: now, data: clone(state.workingData), previousData: clone(preset.data), changeCount: changes.length }); preset.data = clone(state.workingData); preset.updatedAt = now; persist(); updateStatus(); renderPresetList(); renderHistory(); setStatus(`「${preset.name}」を保存しました（${changes.length}席変更）`); }
-    function switchPreset(id) { state.activePresetId = id; state.workingData = clone(activePreset().data); syncInputs(); persist(); presetSelect.value = id; updateStatus(); renderPresetList(); renderHistory(); setStatus(`「${activePreset().name}」を開きました`); }
-    function requestSwitch(id) { if (id === state.activePresetId) return; pendingSwitch = id; if (isDirty()) openDialog("switchDialog"); else switchPreset(id); }
+    const dialogTriggers = new Map();
+    function openDialog(id) {
+      const dialog=document.getElementById(id);
+      dialogTriggers.set(id,document.activeElement);
+      if (id==="historyDialog") document.getElementById("historyDialogTitle").textContent=activePreset().name+"の履歴";
+      if (!dialog.open) dialog.showModal();
+    }
+    function closeDialog(id) { const dialog=document.getElementById(id); if (dialog.open) dialog.close(); }
+    function savePreset() {
+      const changes = diffData(activePreset().data, state.workingData);
+      if (!changes.length) { const ok = persist(); updateStatus(); return ok; }
+      return transact(() => {
+        const preset = activePreset(), now = new Date().toISOString();
+        if (!preset.history.length) preset.history.push({ id:newId(), createdAt:preset.createdAt, data:clone(preset.data), previousData:blankData(), changeCount:diffData({},preset.data).length });
+        preset.history.unshift({ id:newId(), createdAt:now, data:clone(state.workingData), previousData:clone(preset.data), changeCount:changes.length });
+        preset.data = clone(state.workingData);
+        preset.updatedAt = now;
+      }, `変更した${changes.length}席を保存しました。`);
+    }
+
+    function switchPreset(id) {
+      if (!state.presets.some((p) => p.id === id)) return;
+      if (transact(() => { state.activePresetId=id; state.workingData=clone(activePreset().data); }, "プリセットを開きました。")) {
+        undoStack=[]; redoStack=[]; updateStatus(); closeDialog("presetDialog");
+      }
+    }
+
+    function requestSwitch(id) {
+      presetSelect.value = state.activePresetId;
+      if (id === state.activePresetId) return;
+      pendingSwitch=id;
+      if (isDirty()) openDialog("switchDialog"); else switchPreset(id);
+    }
+
     function openNameDialog(title, initial, callback) { document.getElementById("nameDialogTitle").textContent = title; document.getElementById("nameInput").value = initial || ""; nameDialogMode = callback; openDialog("nameDialog"); setTimeout(() => document.getElementById("nameInput").focus(), 0); }
     function renderCompare() { const a = state.presets.find((p) => p.id === document.getElementById("compareA").value); const b = state.presets.find((p) => p.id === document.getElementById("compareB").value); const result = document.getElementById("compareResult"); result.replaceChildren(); if (!a || !b) return; const changes = diffData(a.data, b.data); const heading = document.createElement("p"); heading.textContent = `${a.name} → ${b.name}: 変更 ${changes.length}席`; result.appendChild(heading); const list = document.createElement("ul"); list.className = "diff-list"; changes.forEach((d) => { const li = document.createElement("li"); li.textContent = `${d.label}: ${d.before || "（空欄）"} → ${d.after || "（空欄）"}`; list.appendChild(li); }); result.appendChild(list); }
-    function renderMerge() { const a = state.presets.find((p) => p.id === document.getElementById("mergeA").value); const b = state.presets.find((p) => p.id === document.getElementById("mergeB").value); const holder = document.getElementById("mergeConflicts"); const save = document.getElementById("mergeSaveButton"); holder.replaceChildren(); mergeConflicts = {}; mergeResolved = {}; mergeData = {}; save.disabled = true; if (!a || !b || a.id === b.id) return; Object.keys(blankData()).forEach((id) => { const av = a.data[id] || "", bv = b.data[id] || ""; if (av && bv && av !== bv) { mergeConflicts[id] = { a: av, b: bv }; const box = document.createElement("div"); box.className = "merge-conflict"; const text = document.createElement("div"); text.textContent = `${seatLabel(id)}: ${a.name}「${av}」 / ${b.name}「${bv}」`; const actions = document.createElement("div"); actions.className = "merge-conflict-actions"; [av, bv].forEach((value, i) => { const button = document.createElement("button"); button.textContent = `${i ? b.name : a.name}を採用`; button.addEventListener("click", () => { mergeData[id] = value; mergeResolved[id] = true; actions.querySelectorAll("button").forEach((x) => x.classList.remove("save-button")); button.classList.add("save-button"); save.disabled = Object.keys(mergeConflicts).some((key) => !mergeResolved[key]); }); actions.appendChild(button); }); box.append(text, actions); holder.appendChild(box); } else mergeData[id] = av || bv; }); save.disabled = Object.keys(mergeConflicts).length > 0; }
+    function renderMerge() { const a = state.presets.find((p) => p.id === document.getElementById("mergeA").value); const b = state.presets.find((p) => p.id === document.getElementById("mergeB").value); const holder = document.getElementById("mergeConflicts"); const save = document.getElementById("mergeSaveButton"); holder.replaceChildren(); mergeConflicts = {}; mergeResolved = {}; mergeData = {}; save.disabled = true; if (!a || !b || a.id === b.id) { holder.textContent="異なる2つのプリセットを選択してください。"; return; } const help=document.createElement("p"); help.className="dialog-message"; help.textContent="違う内容の席は、空欄を含めて採用する側を選びます。元のプリセットは残ります。"; holder.appendChild(help); Object.keys(blankData()).forEach((id) => { const av = a.data[id] || "", bv = b.data[id] || ""; if (av !== bv) { mergeConflicts[id] = { a: av, b: bv }; const box = document.createElement("div"); box.className = "merge-conflict"; const text = document.createElement("div"); text.textContent = `${seatLabel(id)}: ${a.name}「${av || "空欄"}」 / ${b.name}「${bv || "空欄"}」`; const actions = document.createElement("div"); actions.className = "merge-conflict-actions"; [av, bv].forEach((value, i) => { const button = document.createElement("button"); button.textContent = `${i ? b.name : a.name}を採用`; button.addEventListener("click", () => { mergeData[id] = value; mergeResolved[id] = true; actions.querySelectorAll("button").forEach((x) => x.classList.remove("save-button")); button.classList.add("save-button"); actions.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === button))); save.disabled = Object.keys(mergeConflicts).some((key) => !mergeResolved[key]); }); actions.appendChild(button); }); box.append(text, actions); holder.appendChild(box); } else mergeData[id] = av; }); save.disabled = Object.keys(mergeConflicts).length > 0; }
     presetSelect.addEventListener("change", () => requestSwitch(presetSelect.value));
-    [saveButton, saveButtonBottom].forEach((button) => button.addEventListener("click", savePreset));
+    saveButton.addEventListener("click", savePreset);
     document.getElementById("presetButton").addEventListener("click", () => { renderPresetList(); openDialog("presetDialog"); });
-    document.getElementById("presetButtonBottom").addEventListener("click", () => { renderPresetList(); openDialog("presetDialog"); });
+
     document.getElementById("historyButton").addEventListener("click", () => { renderHistory(); openDialog("historyDialog"); });
-    document.getElementById("historyButtonBottom").addEventListener("click", () => { renderHistory(); openDialog("historyDialog"); });
+
     document.getElementById("printButton").addEventListener("click", () => window.print());
     document.getElementById("menuButton").addEventListener("click", () => openDialog("menuDialog"));
     document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => closeDialog(button.dataset.close)));
-    document.getElementById("newPresetButton").addEventListener("click", () => openNameDialog("新しいプリセット", "", (name) => { const preset = makePreset(name, state.workingData); state.presets.unshift(preset); state.activePresetId = preset.id; state.workingData = clone(preset.data); persist(); renderPresetSelects(); renderPresetList(); updateStatus(); closeDialog("nameDialog"); closeDialog("presetDialog"); setStatus(`「${preset.name}」を作成しました`); }));
-    document.getElementById("nameForm").addEventListener("submit", (event) => { event.preventDefault(); const name = document.getElementById("nameInput").value.trim(); if (!name || !nameDialogMode) return; const callback = nameDialogMode; nameDialogMode = null; callback(name); });
-    document.getElementById("renameButton").addEventListener("click", () => { const preset = activePreset(); closeDialog("menuDialog"); openNameDialog("プリセット名を変更", preset.name, (name) => { preset.name = name; preset.updatedAt = new Date().toISOString(); persist(); renderPresetSelects(); renderPresetList(); closeDialog("nameDialog"); setStatus("プリセット名を変更しました"); }); });
-    document.getElementById("duplicateButton").addEventListener("click", () => { const source = activePreset(); const preset = makePreset(`${source.name}のコピー`, source.data); state.presets.unshift(preset); state.activePresetId = preset.id; state.workingData = clone(preset.data); persist(); renderPresetSelects(); renderPresetList(); updateStatus(); closeDialog("menuDialog"); setStatus(`「${preset.name}」を作成しました`); });
-    document.getElementById("deleteButton").addEventListener("click", () => { if (state.presets.length < 2) { setStatus("最後のプリセットは削除できません"); return; } if (isDirty() && !window.confirm("未保存の変更があります。削除すると現在の変更も失われます。続行しますか？")) return; if (!window.confirm(`「${activePreset().name}」を削除しますか？この操作は元に戻せません。`)) return; const removed = state.activePresetId; state.presets = state.presets.filter((p) => p.id !== removed); state.activePresetId = state.presets[0].id; state.workingData = clone(activePreset().data); persist(); renderPresetSelects(); renderPresetList(); updateStatus(); closeDialog("menuDialog"); setStatus("プリセットを削除しました"); });
-    document.getElementById("clearButton").addEventListener("click", () => { if (!window.confirm("このプリセットの座席をすべて空欄にしますか？変更は保存するまで確定しません。")) return; state.workingData = blankData(); [...document.querySelectorAll("[data-seat-id]")].forEach((input) => { input.value = ""; updateLengthClass(input); }); persist(); updateStatus(); closeDialog("menuDialog"); setStatus("座席をすべて空欄にしました。保存すると確定します。"); });
-    document.getElementById("switchSaveButton").addEventListener("click", () => { savePreset(); const target = pendingSwitch; pendingSwitch = null; closeDialog("switchDialog"); switchPreset(target); });
+    document.getElementById("newPresetButton").addEventListener("click", () => {
+      openNameDialog("現在の座席を新しく保存", "", (name) => {
+        if (transact(() => { const p=makePreset(name,state.workingData); state.presets.unshift(p); state.activePresetId=p.id; }, "新しいプリセットを保存しました。")) { closeDialog("nameDialog"); closeDialog("presetDialog"); }
+      });
+    });
+    document.getElementById("nameForm").addEventListener("submit", (event) => { event.preventDefault(); const name = document.getElementById("nameInput").value.trim(); if (!name || !nameDialogMode) return; const callback = nameDialogMode; callback(name); });
+    document.getElementById("renameButton").addEventListener("click", () => {
+      closeDialog("menuDialog");
+      openNameDialog("プリセット名を変更",activePreset().name,(name) => {
+        if (transact(() => { activePreset().name=name; activePreset().updatedAt=new Date().toISOString(); }, "名前を変更しました。")) closeDialog("nameDialog");
+      });
+    });
+    document.getElementById("duplicateButton").addEventListener("click", () => {
+      const source=activePreset();
+      if (transact(() => { state.presets.unshift(makePreset(source.name+"のコピー",source.data)); }, "保存済みの内容を複製しました。プリセット一覧から開けます。")) closeDialog("menuDialog");
+    });
+    document.getElementById("deleteButton").addEventListener("click", () => {
+      if (!window.confirm("「"+activePreset().name+"」とその履歴を削除しますか？"+(isDirty() ? " 未保存の座席は作業中のデータとして残します。" : ""))) return;
+      if (transact(() => {
+        const keepWorking=isDirty();
+        state.presets=state.presets.filter((p) => p.id!==state.activePresetId);
+        if (!state.presets.length) state.presets.push(makePreset("通常席",blankData()));
+        state.activePresetId=state.presets[0].id;
+        if (!keepWorking) state.workingData=clone(activePreset().data);
+      }, "プリセットを削除しました。")) { undoStack=[]; redoStack=[]; updateStatus(); closeDialog("menuDialog"); }
+    });
+    document.getElementById("clearButton").addEventListener("click", () => {
+      if (!window.confirm("作業中の座席をすべて空欄にしますか？保存済みのプリセットは残ります。「元に戻す」で取り消せます。")) return;
+      rememberEdit(); state.workingData=blankData(); persist(); updateStatus(); closeDialog("menuDialog");
+      if (!storageError) setStatus("座席を空欄にしました。「元に戻す」で取り消せます。");
+    });
+    document.getElementById("switchSaveButton").addEventListener("click", () => {
+      if (!savePreset()) return;
+      const target=pendingSwitch; pendingSwitch=null; closeDialog("switchDialog"); switchPreset(target);
+    });
     document.getElementById("switchDiscardButton").addEventListener("click", () => { const target = pendingSwitch; pendingSwitch = null; closeDialog("switchDialog"); switchPreset(target); });
     document.getElementById("switchCancelButton").addEventListener("click", () => { pendingSwitch = null; presetSelect.value = state.activePresetId; closeDialog("switchDialog"); });
     document.getElementById("compareButton").addEventListener("click", () => { renderCompare(); openDialog("compareDialog"); });
     ["compareA", "compareB"].forEach((id) => document.getElementById(id).addEventListener("change", renderCompare));
     document.getElementById("mergeButton").addEventListener("click", () => { renderMerge(); openDialog("mergeDialog"); });
     ["mergeA", "mergeB"].forEach((id) => document.getElementById(id).addEventListener("change", renderMerge));
-    document.getElementById("mergeSaveButton").addEventListener("click", () => { const a = document.getElementById("mergeA").value, b = document.getElementById("mergeB").value; if (!a || !b || a === b) { setStatus("異なる2つのプリセットを選択してください"); return; } const preset = makePreset(`${state.presets.find((p) => p.id === a).name}＋${state.presets.find((p) => p.id === b).name}`, mergeData); state.presets.unshift(preset); state.activePresetId = preset.id; state.workingData = clone(preset.data); persist(); renderPresetSelects(); renderPresetList(); updateStatus(); closeDialog("mergeDialog"); setStatus(`「${preset.name}」を作成しました`); });
+    document.getElementById("mergeSaveButton").addEventListener("click", () => {
+      const a=document.getElementById("mergeA").value, b=document.getElementById("mergeB").value;
+      if (a===b || Object.keys(mergeConflicts).some((id) => !mergeResolved[id])) return;
+      const first=state.presets.find((p) => p.id===a), second=state.presets.find((p) => p.id===b);
+      if (!first || !second) return;
+      const data=clone(mergeData);
+      openNameDialog("統合したプリセットを保存", (first.name+"＋"+second.name).slice(0,40), (name) => {
+        if (transact(() => state.presets.unshift(makePreset(name,data)), "統合したプリセットを追加しました。作業中の座席はそのままです。")) { closeDialog("nameDialog"); closeDialog("mergeDialog"); }
+      });
+    });
+    document.querySelectorAll("dialog").forEach((dialog) => {
+      const feedback=document.createElement("p");
+      feedback.className="dialog-feedback";
+      feedback.setAttribute("role","alert");
+      dialog.querySelector(".dialog-body").appendChild(feedback);
+      dialog.addEventListener("close", () => {
+        if (dialog.id==="switchDialog") { pendingSwitch=null; presetSelect.value=state.activePresetId; }
+        const trigger=dialogTriggers.get(dialog.id);
+        if (trigger?.isConnected) trigger.focus();
+      });
+    });
+    document.getElementById("switchDialog").addEventListener("cancel", () => { pendingSwitch=null; presetSelect.value=state.activePresetId; });
+    function changeView(overview) {
+      chart.classList.toggle("overview",overview);
+      document.getElementById("overviewView").setAttribute("aria-pressed",String(overview));
+      document.getElementById("readableView").setAttribute("aria-pressed",String(!overview));
+      document.querySelector(".chart-help").textContent=overview ? "スマホでは名前を縦書きで表示します。席順は同じです。" : "左右にスクロールできます。色の付いた席は、保存前の変更です。";
+    }
+    document.getElementById("overviewView").addEventListener("click",() => changeView(true));
+    document.getElementById("readableView").addEventListener("click",() => changeView(false));
+    function undoEdit(redo) {
+      const source=redo ? redoStack : undoStack, target=redo ? undoStack : redoStack;
+      if (!source.length) return;
+      target.push(clone(state.workingData)); state.workingData=source.pop();
+      persist(); updateStatus();
+      if (!storageError) setStatus(redo ? "入力をやり直しました。" : "ひとつ前の入力に戻しました。");
+    }
+    document.getElementById("undoButton").addEventListener("click",() => undoEdit(false));
+    document.getElementById("redoButton").addEventListener("click",() => undoEdit(true));
+    document.addEventListener("keydown",(event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase()==="s" && !document.querySelector("dialog[open]")) { event.preventDefault(); savePreset(); }
+    });
+    // Preserve the original v2 payload before any normalization or recovery write.
+    try {
+      const original = localStorage.getItem(APP_KEY);
+      if (original && !localStorage.getItem(APP_KEY+".backup")) localStorage.setItem(APP_KEY+".backup", original);
+    } catch { storageError=true; }
+    if (!storageError) persist();
     renderPresetSelects(); renderPresetList(); updateStatus();
   </script>
 </body>
 </html>
-
